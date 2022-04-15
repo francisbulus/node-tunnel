@@ -25,8 +25,7 @@ export default class Request extends Writable {
   If a stream implementation is capable of processing 
   multiple chunks of data at once, 
   the writable._writev() method should be implemented.
-
-  Within the context of the app, it accepts the data - in chunks - that 
+   Within the context of the app, it accepts the data - in chunks - that 
   will be sent to the local server
   */
   _writev(data, next) {
@@ -36,19 +35,22 @@ export default class Request extends Writable {
     });
   }
 
-  _destroy(err, next) {
-    if (!err) next();
-    this._socket.emit("inbound-pipe-error", this._id, err && err.message);
-    this._socket.conn.once("drain", () => {
-      next();
-    });
-    return;
-  }
-
   _final(next) {
     this._socket.emit("inbound-pipe-end", this._id);
     this._socket.conn.once("drain", () => {
       next();
     });
   }
+
+  _destroy(err, next) {
+    if (err) {
+      this._socket.emit("inbound-pipe-error", this._id, err && err.message);
+      this._socket.conn.once("drain", () => {
+        next();
+      });
+      return;
+    }
+    next();
+  }
 }
+//# sourceMappingURL=request.js.map
