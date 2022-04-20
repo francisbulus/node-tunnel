@@ -9,9 +9,8 @@ export default class Request extends Writable {
   }
 
   /*
-  This is a method for writing streams as well but
-  it gets deprioritized - for _writev - when a stream contains
-  multiple chunks to be written at once.
+ This adds the write functionality - native to the response stream - to the custom request 
+ stream
   */
   _write(data, enc, next) {
     this._socket.emit("inbound-pipe", this._id, data);
