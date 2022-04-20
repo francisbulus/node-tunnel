@@ -3,9 +3,13 @@ import http from "http";
 import { Server } from "socket.io";
 import Request from "./streams/request.js";
 import Response from "./streams/response.js";
-import { v4 } from "uuid";
 import morgan from "morgan";
-import EventEmitter from "events";
+import crypto from "crypto";
+import { handleBadRequestToSocket, handleRequestError, handleSocketError } from "./utils/error-handlers/server.js";
+import { handleSocketClientDisconnect, handlePing } from "./utils/general-helpers/sockets.js";
+import { handleResponse } from "./utils/general-helpers/server.js";
+import { handleSocketConnectionError } from "./utils/error-handlers/sockets.js";
+import { checkConnection } from "./utils/general-helpers/sockets.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -15,44 +19,21 @@ let connections = {};
 io.on("connection", socket => {
   const host = socket.handshake.headers.host;
   connections[host] = socket;
-  console.log(host);
-
-  const handleConnError = e => {
-    delete connections[host];
-    socket.off("message", handlePing);
-    socket.off("disconnect", onDisconnect);
-  };
-
-  const onDisconnect = () => {
-    delete connections[host];
-    socket.off("message", handlePing);
-    socket.off("error", handleConnError);
-  };
-
-  socket.once("disconnect", onDisconnect);
-
-  const handlePing = msg => {
-    if (msg === "ping") {
-      socket.send("pong");
-    }
-  };
-
-  socket.on("message", handlePing);
-  socket.once("disconnect", onDisconnect);
-  socket.once("error", handleConnError);
+  socket.on("message", handlePing.bind(null, socket));
+  socket.once("disconnect", function () {
+    handleSocketClientDisconnect(socket, connections);
+  });
+  socket.once("error", function () {
+    handleSocketConnectionError(socket, connections);
+  });
 });
 
 app.use(morgan("tiny"));
-// app.use(requestID());
-
-app.use("/", (req, res) => {
-  const socket = connections[req.headers.host];
-  if (!socket) {
-    res.status(404);
-    res.send("Not Found");
-    return;
-  }
-  const id = v4();
+app.use("/", (req, res, next) => {
+  checkConnection(req, res, next, connections);
+}, (req, res) => {
+  const socket = res.locals.socket;
+  const id = crypto.randomUUID();
   const inbound = new Request({
     id,
     socket,
@@ -62,43 +43,33 @@ app.use("/", (req, res) => {
       path: req.url
     }
   });
-  const onReqError = e => {
-    inbound.destroy(new Error(e || "Aborted"));
-  };
 
-  const handleResponse = (statusCode, statusMessage, headers) => {
-    inbound.off("requestError", handleRequestError);
-    res.writeHead(statusCode, statusMessage, headers);
-  };
-
-  req.once("aborted", onReqError);
-  req.once("error", onReqError);
-  req.pipe(inbound);
+  req.once("aborted", handleBadRequestToSocket.bind(null, req));
+  req.once("error", handleBadRequestToSocket.bind(null, req));
   req.once("finish", () => {
-    req.off("aborted", onReqError);
-    req.off("error", onReqError);
+    req.off("aborted", handleBadRequestToSocket.bind(null, req));
+    req.off("error", handleBadRequestToSocket.bind(null, req));
   });
+  req.pipe(inbound);
   const outbound = new Response({ id, socket });
 
-  const handleSocketError = () => {
-    res.end(500);
-  };
-  const handleRequestError = () => {
-    outbound.off("response", handleResponse);
-    outbound.destroy();
-    res.status(502);
-    res.end("yikes, there's a equest error");
+  const handleSocketErrorWrapper = () => {
+    handleSocketError(res);
   };
 
-  outbound.once("requestError", handleRequestError);
-  outbound.once("response", handleResponse);
-  outbound.pipe(res);
-  outbound.once("error", handleSocketError);
-  socket.once("close", handleSocketError);
-  res.once("close", () => {
-    socket.off("close", handleSocketError);
-    outbound.off("error", handleSocketError);
+  outbound.once("requestError", function () {
+    handleRequestError(res, outbound);
   });
+  outbound.once("response", function (statusCode, statusMessage, headers) {
+    handleResponse(statusCode, statusMessage, headers, inbound, res);
+  });
+  outbound.once("error", handleSocketErrorWrapper);
+  outbound.pipe(res);
+  res.once("close", () => {
+    socket.off("close", handleSocketErrorWrapper);
+    outbound.off("error", handleSocketErrorWrapper);
+  });
+  socket.once("close", handleSocketErrorWrapper);
 });
 
 export default server;
