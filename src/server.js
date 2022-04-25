@@ -20,37 +20,34 @@ import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { createClient } from "redis";
 
-// const store = createClient();
+const store = createClient();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 let connections = {};
 
-// store.on("connect", function () {
-//   console.log("Connected!");
-// });
+store.on("connect", function () {
+  console.log("Connected!");
+});
 
 let socket2;
 
-// await store.connect();
+await store.connect();
 
 let access;
 
-io.on("connection", async (socket) => {
+io.once("connection", async (socket) => {
   const host = socket.handshake.headers.host;
   socket2 = socket;
-  // socket.once("room", async function (room) {
-  //   if (typeof room == "string") access = room;
-  //   // await store.set("proof", socket.id);
-  //   // io.to(room).emit("message", {
-  //   //   message: `${host} connected!`,
-  //   //   created: Date.now(),
-  //   // });
-  // });
-  socket.on("message", (msg) => {
-    if (msg !== "ping") return;
-    socket.send("pong");
+  socket.once("room", async function (room) {
+    if (typeof room == "string") access = room;
+    await store.set("proof", socket.id);
+    io.to(room).emit("message", {
+      message: `${host} connected!`,
+      created: Date.now(),
+    });
   });
+  socket.on("message", handlePing.bind(null, socket));
   socket.once("disconnect", function () {
     handleSocketClientDisconnect(socket, connections);
   });
@@ -59,14 +56,14 @@ io.on("connection", async (socket) => {
   });
 });
 
-// app.use(express.json());
+app.use(express.json());
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(
   "/",
-  // async (req, res, next) => {
-  //   checkConnection(req, res, next, store);
-  // },
+  async (req, res, next) => {
+    checkConnection(req, res, next, store, socket2);
+  },
   (req, res) => {
     let socket = socket2;
     const id = crypto.randomUUID();
@@ -87,10 +84,10 @@ app.use(
       req.off("error", handleBadRequestToSocket.bind(null, req));
     });
     req.pipe(inbound);
-    const outbound = new Response({ id, socket: socket2 });
+    const outbound = new Response({ id, socket });
 
     const handleSocketErrorWrapper = () => {
-      handleSocketError(res, socket2);
+      handleSocketError(res, socket);
     };
 
     outbound.once("requestError", function () {
@@ -109,6 +106,6 @@ app.use(
   }
 );
 
-export { io };
+export { io, store };
 
 export default server;
