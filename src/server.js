@@ -31,13 +31,17 @@ const io = new Server(server);
 let connections = {};
 
 io.on("connection", (socket) => {
-  socket.send(
-    JSON.stringify({
-      type: "hello from server",
-      content: [1, "2"],
-    })
-  );
+  const connectionId = nanoid(10);
   const host = socket.handshake.headers.host;
+  socket.join(connectionId);
+  socket.send(connectionId);
+  socket.on("room", function (room) {
+    socket.join(room);
+    io.to(room).emit("message", {
+      message: `${host} connected!`,
+      created: Date.now(),
+    });
+  });
   connections[host] = socket;
   socket.on("message", handlePing.bind(null, socket));
   socket.once("disconnect", function () {
