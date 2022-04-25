@@ -20,6 +20,7 @@ import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { nanoid } from "nanoid";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,6 +31,12 @@ const io = new Server(server);
 let connections = {};
 
 io.on("connection", (socket) => {
+  socket.send(
+    JSON.stringify({
+      type: "hello from server",
+      content: [1, "2"],
+    })
+  );
   const host = socket.handshake.headers.host;
   connections[host] = socket;
   socket.on("message", handlePing.bind(null, socket));
