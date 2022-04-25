@@ -14,24 +14,24 @@ export const handleSocketClientDisconnect = (socket, connections) => {
   socket.off("message", handlePing);
 };
 
-export const checkConnection = async (req, res, next, store, socket) => {
-  // let socket;
-  // let id;
-  // const ip = proxyAddr(req, (proxy) => proxy);
-  // const key = req.body && req.body.key;
-  // const clientConnection = await store.get(ip);
-  // if (!id) id = await store.get("dope");
-  // if (!socket) socket = io.sockets.sockets.get(id);
-  // if (!clientConnection && !key) {
-  //   res.sendFile("index.html", { root: "src/" + "public" });
-  //   return;
-  // } else {
-  //   // let socket = io.sockets.sockets.get(id);
-  //   if (!socket) {
-  //     res.status(404).send("No socket connection found for given client");
-  //     return;
-  //   }
-  // if (!clientConnection) await store.set(ip, key);
-  res.locals.socket = socket;
-  next();
+export const checkConnection = async (req, res, next, store) => {
+  let socket;
+  const ip = proxyAddr(req, (proxy) => proxy);
+  const roomAccessKey = req.body && req.body.key;
+  const roomAccessFromSession = await store.get(ip);
+  if (!roomAccessFromSession && !roomAccessKey) {
+    res.sendFile("index.html", { root: "src/" + "public" });
+    return;
+  } else {
+    if (!socket && (roomAccessFromSession || roomAccessKey))
+      socket = io.sockets.sockets.get(roomAccessFromSession || roomAccessKey);
+    if (!socket) {
+      res.status(404).send("No socket connection found for given client");
+      return;
+    }
+    if (socket && roomAccessKey && !roomAccessFromSession)
+      await store.set(ip, roomAccessKey);
+    res.locals.socket = socket;
+    next();
+  }
 };

@@ -18,7 +18,6 @@ import { handleResponse } from "./utils/general-helpers/server.js";
 import { handleSocketConnectionError } from "./utils/error-handlers/sockets.js";
 import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
-// import { nanoid } from "nanoid";
 import { createClient } from "redis";
 
 const store = createClient();
@@ -31,18 +30,13 @@ store.on("connect", function () {
   console.log("Connected!");
 });
 
-let socket;
-
-// await store.connect();
+await store.connect();
 
 io.on("connection", async (socket) => {
-  const conn = "dope";
   const host = socket.handshake.headers.host;
-  socket = socket;
-  socket.join(conn);
-  await store.set("dope", socket.id);
-  socket.send(conn);
   socket.on("room", function (room) {
+    await store.set(room, socket.id);
+    socket.join(room);
     io.to(room).emit("message", {
       message: `${host} connected!`,
       created: Date.now(),
@@ -63,11 +57,12 @@ app.use(cors());
 app.all(
   "/",
   (req, res, next) => {
-    checkConnection(req, res, next, store, socket);
+    checkConnection(req, res, next, store);
   },
   (req, res) => {
     const socket = res.locals.socket;
     const id = crypto.randomUUID();
+    console.log();
     const inbound = new Request({
       id,
       socket,
@@ -86,8 +81,6 @@ app.all(
     });
     req.pipe(inbound);
     const outbound = new Response({ id, socket });
-
-    console.log(outbound);
 
     const handleSocketErrorWrapper = () => {
       handleSocketError(res);
