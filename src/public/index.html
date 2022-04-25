@@ -6,18 +6,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <script>
-    async function connect() {
+    async function refresh() {
+      window.location = window.location.href;
+    }
+    async function connect(e) {
       const key = document.getElementById("connect-key").value;
+      console.log(key)
+      // return;
       await fetch('http://localhost:1337/', {
         mode: 'cors', 
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify( {key: key })
-      })
-      .then(response => console.log("received"))
-      .catch(err => console.error(err))
+        headers: new Headers({
+          'Authorization': 'Bearer ' + key, 
+        })
+      }).then(res => refresh()).catch(err => console.error(err))
     }
   </script>
   <div class="hero min-h-screen bg-base-200">
@@ -25,8 +26,10 @@
       <div class="max-w-md">
         <h1 class="text-5xl font-bold">👋🏾</h1>
         <p class="py-6">Your session key here 👇🏾</p>
-        <input type="text" placeholder="Enter key" class="input w-full max-w-xs mt-2 mb-4" id="connect-key">
-        <button class="btn btn-primary mt-2 w-full" onclick="connect()">Connect</button>
+        <!-- <form onsubmit="return false;"> -->
+          <input type="text" placeholder="Enter key" class="input w-full max-w-xs mt-2 mb-4" id="connect-key">
+          <button class="btn btn-primary mt-2 w-full" id="connect-btn" onclick=connect()>Connect</button>
+      <!-- </form> -->
       </div>
     </div>
 </html>

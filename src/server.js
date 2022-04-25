@@ -30,18 +30,13 @@ store.on("connect", function () {
   console.log("Connected!");
 });
 
-let socket2;
-
 await store.connect();
 
-let access;
-
-io.once("connection", async (socket) => {
+io.on("connection", async (socket) => {
   const host = socket.handshake.headers.host;
-  socket2 = socket;
   socket.once("room", async function (room) {
-    if (typeof room == "string") access = room;
-    await store.set("proof", socket.id);
+    socket.join(room);
+    await store.set(room, socket.id);
     io.to(room).emit("message", {
       message: `${host} connected!`,
       created: Date.now(),
@@ -62,10 +57,10 @@ app.use(cors());
 app.use(
   "/",
   async (req, res, next) => {
-    checkConnection(req, res, next, store, socket2);
+    checkConnection(req, res, next, store);
   },
   (req, res) => {
-    let socket = socket2;
+    let socket = res.locals.socket;
     const id = crypto.randomUUID();
     const inbound = new Request({
       id,
