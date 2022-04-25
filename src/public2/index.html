@@ -16,7 +16,7 @@
         },
         body: JSON.stringify( {key: key })
       })
-      .then(response => response.json())
+      .then(response => console.log("received"))
       .catch(err => console.error(err))
     }
   </script>
