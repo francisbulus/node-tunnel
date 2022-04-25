@@ -17,6 +17,12 @@ import {
 import { handleResponse } from "./utils/general-helpers/server.js";
 import { handleSocketConnectionError } from "./utils/error-handlers/sockets.js";
 import { checkConnection } from "./utils/general-helpers/sockets.js";
+import cors from "cors";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
@@ -35,7 +41,35 @@ io.on("connection", (socket) => {
   });
 });
 
+app.use("/", (req, res) => {
+  console.log(__dirname);
+  // express.static(__dirname + "public");
+
+  res.sendFile("index.html", {
+    root: __dirname + "/public",
+  });
+});
+
+// app.get("*.*", express.static(path.resolve("view/src/index.html"), "utf8"));
 app.use(morgan("tiny"));
+app.use(cors());
+app.use("/", (req, res) => {
+  // fs.readFile(path.resolve("view/src/index.html"), "utf8", (err, data) => {
+  //   if (err) {
+  //     console.error(err);
+  //     return res.status(500).send("An error occurred");
+  //   }
+  //   res.sendFile(data);
+  //   // console.log(data);
+  // });
+
+  express.static("public", { index: "src/index.html" });
+  res.end();
+
+  // res.sendFile("index.html", {
+  //   root: __dirname + "/public/src/",
+  // });
+});
 app.use(
   "/",
   (req, res, next) => {
@@ -83,6 +117,6 @@ app.use(
   }
 );
 
-// test
+// // test
 
 export default server;

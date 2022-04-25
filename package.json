@@ -8,6 +8,7 @@
     "start": "npm run build && node ./build/index.js",
     "clean": "rm -rf build && mkdir build",
     "build-babel": "babel -d ./build ./src -s",
+    "build-static": "babel -d ./build ./src/public/src/index.html",
     "dev": "nodemon  --exec babel-node ./src/index.js"
   },
   "repository": "https://github.com/francisbulus/node-tunnel-server.git",
