@@ -21,20 +21,27 @@ import cors from "cors";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { nanoid } from "nanoid";
+import { createClient } from "redis";
+import proxyaddr from "proxy-addr";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+const address = proxyaddr;
+const store = createClient();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 let connections = {};
 
-io.on("connection", (socket) => {
-  const connectionId = nanoid(10);
+store.on("connect", function () {
+  console.log("Connected!");
+});
+
+await store.connect();
+
+io.on("connection", async (socket) => {
+  const conn = nanoid(10);
   const host = socket.handshake.headers.host;
-  socket.join(connectionId);
-  socket.send(connectionId);
+  socket.join(conn);
+  socket.send(conn);
   socket.on("room", function (room) {
     socket.join(room);
     io.to(room).emit("message", {
@@ -42,7 +49,7 @@ io.on("connection", (socket) => {
       created: Date.now(),
     });
   });
-  connections[host] = socket;
+  await store.set(conn, socket);
   socket.on("message", handlePing.bind(null, socket));
   socket.once("disconnect", function () {
     handleSocketClientDisconnect(socket, connections);
@@ -52,41 +59,16 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use("/", (req, res) => {
-  console.log(__dirname);
-  // express.static(__dirname + "public");
-
-  res.sendFile("index.html", {
-    root: __dirname + "/public",
-  });
-});
-
-// app.get("*.*", express.static(path.resolve("view/src/index.html"), "utf8"));
+app.use(express.json());
 app.use(morgan("tiny"));
 app.use(cors());
-app.use("/", (req, res) => {
-  // fs.readFile(path.resolve("view/src/index.html"), "utf8", (err, data) => {
-  //   if (err) {
-  //     console.error(err);
-  //     return res.status(500).send("An error occurred");
-  //   }
-  //   res.sendFile(data);
-  //   // console.log(data);
-  // });
-
-  express.static("public", { index: "src/index.html" });
-  res.end();
-
-  // res.sendFile("index.html", {
-  //   root: __dirname + "/public/src/",
-  // });
-});
-app.use(
+app.all(
   "/",
   (req, res, next) => {
-    checkConnection(req, res, next, connections);
+    checkConnection(req, res, next, store);
   },
   (req, res) => {
+    const ip = address(req, (proxy) => proxy);
     const socket = res.locals.socket;
     const id = crypto.randomUUID();
     const inbound = new Request({
