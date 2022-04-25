@@ -4,7 +4,10 @@ export const handleBadRequestToSocket = (err, request) => {
   request.destroy(new Error(err));
 };
 
-export const handleSocketError = (res) => {
+export const handleSocketError = (res, socket) => {
+  res.off("close", () => {
+    socket.once("disonnect", handleSocketError);
+  });
   res.end(500);
 };
 

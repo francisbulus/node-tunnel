@@ -15,8 +15,8 @@ export default class Response extends Readable {
     };
     const handlePipes = (id, data) => {
       if (this._id === id) {
-        data.forEach(chunk => {
-          this.push(chunk);
+        data.forEach((chunk) => {
+          if (typeof data !== "number") this.push(chunk);
         });
       }
     };

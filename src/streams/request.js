@@ -5,6 +5,7 @@ export default class Request extends Writable {
     super();
     this._socket = socket;
     this._id = id;
+    console.log(socket.emit);
     this._socket.emit("request", id, req);
   }
 
