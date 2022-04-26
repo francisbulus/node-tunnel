@@ -32,7 +32,9 @@ store.on("connect", function () {
 
 await store.connect();
 
-io.on("connection", async (socket) => {
+let adapter;
+io.once("connection", async (socket) => {
+  adapter = socket;
   const host = socket.handshake.headers.host;
   socket.once("room", async function (room) {
     socket.join(room);
@@ -56,11 +58,11 @@ app.use(morgan("tiny"));
 app.use(cors());
 app.use(
   "/",
-  async (req, res, next) => {
-    checkConnection(req, res, next, store);
-  },
+  // async (req, res, next) => {
+  //   checkConnection(req, res, next, store, adapter);
+  // },
   (req, res) => {
-    let socket = res.locals.socket;
+    let socket = adapter;
     const id = crypto.randomUUID();
     const inbound = new Request({
       id,
