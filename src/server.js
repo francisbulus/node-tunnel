@@ -36,7 +36,10 @@ const connToRedis = async () => {
 
 connToRedis();
 
+let sck;
+
 io.on("connection", (socket) => {
+  sck = socket;
   let access;
   socket.once("join", async function (room) {
     // socket.join(room);
@@ -59,55 +62,48 @@ io.on("connection", (socket) => {
 app.use(express.json());
 app.use(morgan("tiny"));
 app.use(cors());
-app.use(
-  "/",
-  async (req, res, next) => {
-    checkConnection(req, res, next, store);
-  },
-  (req, res) => {
-    const socket = res.locals.socket;
-    const room = res.locals.room;
-    const id = crypto.randomUUID();
-    console.log(id);
-    const inbound = new Request({
-      id,
-      socket,
-      // room,
-      req: {
-        method: req.method,
-        headers: Object.assign({}, req.headers),
-        path: req.url,
-      },
-    });
+app.use("/", (req, res) => {
+  const socket = sck;
+  // const room = res.locals.room;
+  const id = crypto.randomUUID();
+  const inbound = new Request({
+    id,
+    socket,
+    // room,
+    req: {
+      method: req.method,
+      headers: Object.assign({}, req.headers),
+      path: req.url,
+    },
+  });
 
-    req.once("aborted", handleBadRequestToSocket.bind(null, req));
-    req.once("error", handleBadRequestToSocket.bind(null, req));
-    req.once("finish", () => {
-      req.off("aborted", handleBadRequestToSocket.bind(null, req));
-      req.off("error", handleBadRequestToSocket.bind(null, req));
-    });
-    req.pipe(inbound);
-    const outbound = new Response({ id, socket });
+  req.once("aborted", handleBadRequestToSocket.bind(null, req));
+  req.once("error", handleBadRequestToSocket.bind(null, req));
+  req.once("finish", () => {
+    req.off("aborted", handleBadRequestToSocket.bind(null, req));
+    req.off("error", handleBadRequestToSocket.bind(null, req));
+  });
+  req.pipe(inbound);
+  const outbound = new Response({ id, socket });
 
-    const handleSocketErrorWrapper = () => {
-      handleSocketError(res, socket);
-    };
+  const handleSocketErrorWrapper = () => {
+    handleSocketError(res, socket);
+  };
 
-    outbound.once("proxy-request-error", function () {
-      handleRequestError(res, outbound);
-    });
-    outbound.once("response", function (statusCode, statusMessage, headers) {
-      handleResponse(statusCode, statusMessage, headers, inbound, res);
-    });
-    outbound.once("error", handleSocketErrorWrapper);
-    outbound.pipe(res);
-    res.once("close", () => {
-      socket.off("close", handleSocketErrorWrapper);
-      outbound.off("error", handleSocketErrorWrapper);
-    });
-    socket.once("close", handleSocketErrorWrapper);
-  }
-);
+  outbound.once("proxy-request-error", function () {
+    handleRequestError(res, outbound);
+  });
+  outbound.once("response", function (statusCode, statusMessage, headers) {
+    handleResponse(statusCode, statusMessage, headers, inbound, res);
+  });
+  outbound.once("error", handleSocketErrorWrapper);
+  outbound.pipe(res);
+  res.once("close", () => {
+    socket.off("close", handleSocketErrorWrapper);
+    outbound.off("error", handleSocketErrorWrapper);
+  });
+  socket.once("close", handleSocketErrorWrapper);
+});
 
 export { io, store };
 

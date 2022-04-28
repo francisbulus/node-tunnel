@@ -15,12 +15,12 @@ export const handleSocketClientDisconnect = async (socket, access) => {
 };
 
 export const checkConnection = async (req, res, next, store) => {
+  if (res.locals.room) next();
   const clientIp = proxyAddr(req, (proxy) => proxy);
   const roomAccessFromInput = getToken(req);
   const roomAccessFromSession = await store.get(clientIp);
   let socket;
   const access = roomAccessFromSession || roomAccessFromInput;
-  // console.log("in here: ", access);
   if (!access) {
     res.sendFile("index.html", { root: "src/" + "public" });
     return;
