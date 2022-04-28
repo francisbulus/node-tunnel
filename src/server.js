@@ -39,7 +39,7 @@ connToRedis();
 io.on("connection", (socket) => {
   let access;
   socket.once("join", async function (room) {
-    socket.join(room);
+    // socket.join(room);
     access = room;
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
@@ -66,13 +66,11 @@ app.use(
   },
   (req, res) => {
     const socket = res.locals.socket;
-    const room = res.locals.room;
     const id = crypto.randomUUID();
     console.log(id);
     const inbound = new Request({
       id,
       socket,
-      room,
       req: {
         method: req.method,
         headers: Object.assign({}, req.headers),

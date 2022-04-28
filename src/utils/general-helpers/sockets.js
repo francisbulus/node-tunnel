@@ -15,7 +15,6 @@ export const handleSocketClientDisconnect = async (socket, access) => {
 };
 
 export const checkConnection = async (req, res, next, store) => {
-  if (res.locals.room) next();
   const clientIp = proxyAddr(req, (proxy) => proxy);
   const roomAccessFromInput = getToken(req);
   const roomAccessFromSession = await store.get(clientIp);
@@ -37,7 +36,7 @@ export const checkConnection = async (req, res, next, store) => {
       return;
     }
     res.locals.socket = socket;
-    res.locals.room = access;
+    // res.locals.room = access;
     next();
   }
 };
