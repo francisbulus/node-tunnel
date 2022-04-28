@@ -28,14 +28,15 @@ store.on("connect", function () {
   console.log("connected to some rando!");
 });
 
-await store.connect();
+await store.connect({
+  url: process.env.REDIS_URL,
+});
 
 io.on("connection", async (socket) => {
   let access;
   socket.once("join", async function (room) {
     socket.join(room);
     access = room;
-    console.log("access: ", access);
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
       message: `You've been connected!`,
@@ -62,7 +63,6 @@ app.use(
   (req, res) => {
     const socket = res.locals.socket;
     const room = res.locals.room;
-    console.log("champ", room);
     const id = crypto.randomUUID();
     console.log(id);
     const inbound = new Request({
