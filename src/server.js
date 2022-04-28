@@ -18,6 +18,7 @@ import { handleSocketConnectionError } from "./utils/error-handlers/sockets.js";
 import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { createClient } from "redis";
+import crypto from "crypto";
 
 const store = createClient();
 const app = express();
@@ -59,9 +60,10 @@ app.use(
   },
   (req, res) => {
     const socket = res.locals.socket;
-    const id = res.locals.room;
+    // const room = res.locals.room;
+    const id = crypto.randomUUID();
     const inbound = new Request({
-      id: room,
+      id,
       socket,
       req: {
         method: req.method,
@@ -87,7 +89,8 @@ app.use(
       handleRequestError(res, outbound);
     });
     outbound.once("response", function (statusCode, statusMessage, headers) {
-      handleResponse(statusCode, statusMessage, headers, inbound, res);
+      // handleResponse(statusCode, statusMessage, headers, inbound, res);
+      res.writeHead(statusCode, statusMessage, headers);
     });
     outbound.once("error", handleSocketErrorWrapper);
     outbound.pipe(res);

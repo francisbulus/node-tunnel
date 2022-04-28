@@ -27,6 +27,8 @@ export const checkConnection = async (req, res, next, store) => {
     socket = io.sockets.sockets.get(socketId);
     if (!roomAccessFromSession && socket) store.set(clientIp, access);
     if (!socket) {
+      await store.del(access);
+      await store.del(clientIp);
       res.status(404).send("No socket connection found for given client");
       return;
     }
