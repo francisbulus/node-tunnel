@@ -1,6 +1,6 @@
 import { handleSocketConnectionError } from "../error-handlers/sockets.js";
 import proxyAddr from "proxy-addr";
-import { io } from "../../server.js";
+import { io, store } from "../../server.js";
 import { getToken } from "./server.js";
 
 export const handlePing = (msg, socket) => {
@@ -8,7 +8,8 @@ export const handlePing = (msg, socket) => {
   socket.send("pong");
 };
 
-export const handleSocketClientDisconnect = (socket) => {
+export const handleSocketClientDisconnect = async (socket, access) => {
+  await store.del(access);
   socket.off("error", handleSocketConnectionError);
   socket.off("message", handlePing);
 };
@@ -19,6 +20,7 @@ export const checkConnection = async (req, res, next, store) => {
   const roomAccessFromSession = await store.get(clientIp);
   let socket;
   const access = roomAccessFromSession || roomAccessFromInput;
+  // console.log("in here: ", access);
   if (!access) {
     res.sendFile("index.html", { root: "src/" + "public" });
     return;
@@ -29,7 +31,9 @@ export const checkConnection = async (req, res, next, store) => {
     if (!socket) {
       await store.del(access);
       await store.del(clientIp);
-      res.status(404).send("No socket connection found for given client");
+      res
+        .status(404)
+        .send("No socket connection found for the given room access key");
       return;
     }
     res.locals.socket = socket;

@@ -1,10 +1,12 @@
 import { Writable } from "stream";
 
 export default class Request extends Writable {
-  constructor({ id, socket, req }) {
+  constructor({ id, socket, room, req }) {
     super();
     this._socket = socket;
     this._id = id;
+    this._room = room;
+    console.log("this", this._room);
     this._socket.emit("request", id, req);
   }
 

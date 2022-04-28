@@ -19,34 +19,35 @@ import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { createClient } from "redis";
 import crypto from "crypto";
-
 const store = createClient();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-let connections = {};
 
 store.on("connect", function () {
-  console.log("Connected!");
+  console.log("connected to some rando!");
 });
 
 await store.connect();
 
-io.once("connection", async (socket) => {
-  socket.once("room", async function (room) {
+io.on("connection", async (socket) => {
+  let access;
+  socket.once("join", async function (room) {
     socket.join(room);
+    access = room;
+    console.log("access: ", access);
     await store.set(room, socket.id);
-    io.to(room).emit("message", {
-      message: `connected!`,
-      created: Date.now(),
+    io.to(room).emit("room-confirmation", {
+      message: `You've been connected!`,
+      joined_at: Date.now(),
     });
   });
   socket.on("message", handlePing.bind(null, socket));
   socket.once("disconnect", function () {
-    handleSocketClientDisconnect(socket, connections);
+    handleSocketClientDisconnect(socket, access);
   });
   socket.once("error", function () {
-    handleSocketConnectionError(socket, connections);
+    handleSocketConnectionError(socket, store, access);
   });
 });
 
@@ -60,11 +61,14 @@ app.use(
   },
   (req, res) => {
     const socket = res.locals.socket;
-    // const room = res.locals.room;
+    const room = res.locals.room;
+    console.log("champ", room);
     const id = crypto.randomUUID();
+    console.log(id);
     const inbound = new Request({
       id,
       socket,
+      room,
       req: {
         method: req.method,
         headers: Object.assign({}, req.headers),
@@ -85,12 +89,11 @@ app.use(
       handleSocketError(res, socket);
     };
 
-    outbound.once("requestError", function () {
+    outbound.once("proxy-request-error", function () {
       handleRequestError(res, outbound);
     });
     outbound.once("response", function (statusCode, statusMessage, headers) {
-      // handleResponse(statusCode, statusMessage, headers, inbound, res);
-      res.writeHead(statusCode, statusMessage, headers);
+      handleResponse(statusCode, statusMessage, headers, inbound, res);
     });
     outbound.once("error", handleSocketErrorWrapper);
     outbound.pipe(res);

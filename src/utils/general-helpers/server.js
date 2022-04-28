@@ -7,7 +7,7 @@ export const handleResponse = (
   inbound,
   res
 ) => {
-  inbound.off("requestError", handleRequestError);
+  inbound.off("proxy-request-error", handleRequestError);
   res.writeHead(statusCode, statusMessage, headers);
 };
 

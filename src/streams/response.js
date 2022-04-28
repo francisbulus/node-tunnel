@@ -47,7 +47,7 @@ export default class Response extends Readable {
         this._socket.off("outbound-pipe-end", handleStreamClose);
         this._socket.off("outbound-pipe-error", handleStreamError);
         this._socket.off("request-error", handleBadRequest);
-        this.emit("requestError", error);
+        this.emit("proxy-request-error", error);
       }
     };
 
