@@ -30,9 +30,13 @@ store.on("connect", function () {
   console.log("connected to some rando!");
 });
 
-await store.connect();
+const connToRedis = async () => {
+  await store.connect();
+};
 
-io.on("connection", async (socket) => {
+connToRedis();
+
+io.on("connection", (socket) => {
   let access;
   socket.once("join", async function (room) {
     socket.join(room);
