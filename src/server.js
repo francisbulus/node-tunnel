@@ -39,10 +39,10 @@ connToRedis();
 io.on("connection", (socket) => {
   let access;
   socket.once("join", async function (room) {
-    socket.join(room);
-    access = room;
+    // socket.join(room);
+    // access = room;
     await store.set(room, socket.id);
-    io.to(room).emit("room-confirmation", {
+    io.emit("room-confirmation", {
       message: `You've been connected!`,
       joined_at: Date.now(),
     });
@@ -72,7 +72,7 @@ app.use(
     const inbound = new Request({
       id,
       socket,
-      room,
+      // room,
       req: {
         method: req.method,
         headers: Object.assign({}, req.headers),
