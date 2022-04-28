@@ -19,7 +19,9 @@ import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { createClient } from "redis";
 import crypto from "crypto";
-const store = createClient();
+const store = createClient({
+  url: process.env.REDIS_URL,
+});
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -28,9 +30,7 @@ store.on("connect", function () {
   console.log("connected to some rando!");
 });
 
-await store.connect({
-  url: process.env.REDIS_URL,
-});
+await store.connect();
 
 io.on("connection", async (socket) => {
   let access;
