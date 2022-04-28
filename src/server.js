@@ -4,7 +4,6 @@ import { Server } from "socket.io";
 import Request from "./streams/request.js";
 import Response from "./streams/response.js";
 import morgan from "morgan";
-import crypto from "crypto";
 import {
   handleBadRequestToSocket,
   handleRequestError,
@@ -32,15 +31,12 @@ store.on("connect", function () {
 
 await store.connect();
 
-let adapter;
 io.once("connection", async (socket) => {
-  adapter = socket;
-  const host = socket.handshake.headers.host;
   socket.once("room", async function (room) {
     socket.join(room);
     await store.set(room, socket.id);
     io.to(room).emit("message", {
-      message: `${host} connected!`,
+      message: `connected!`,
       created: Date.now(),
     });
   });
@@ -58,14 +54,14 @@ app.use(morgan("tiny"));
 app.use(cors());
 app.use(
   "/",
-  // async (req, res, next) => {
-  //   checkConnection(req, res, next, store, adapter);
-  // },
+  async (req, res, next) => {
+    checkConnection(req, res, next, store);
+  },
   (req, res) => {
-    let socket = adapter;
-    const id = crypto.randomUUID();
+    const socket = res.locals.socket;
+    const id = res.locals.room;
     const inbound = new Request({
-      id,
+      id: room,
       socket,
       req: {
         method: req.method,
