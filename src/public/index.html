@@ -37,7 +37,7 @@
           Authorization: "Bearer " + key,
         }),
       })
-        .then((res) => res.ok && refresh())
+        .then((res) => res.status === "okay" && refresh())
         .catch((err) => console.error(err));
     }
   </script>
