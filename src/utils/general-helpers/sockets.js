@@ -27,7 +27,7 @@ export const checkConnection = async (req, res, next, store, adapter) => {
       if (err) {
         res.end(500);
       } else {
-        res.status(200).send("whut whut connected");
+        res.status(200).send("whut whut added");
       }
     });
   } else {
