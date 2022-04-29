@@ -21,11 +21,6 @@ export const checkConnection = async (req, res, next, store, adapter) => {
   let socket;
   const access = roomAccessFromSession || roomAccessFromInput;
 
-  // // experiment starts here
-  // res.locals.socket = adapter;
-  // // res.locals.room = access;
-  // next();
-
   // experiment ends here
   if (!access) {
     res.sendFile("index.html", { root: "src/" + "public" }, (err) => {
