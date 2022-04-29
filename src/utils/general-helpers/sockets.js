@@ -26,9 +26,11 @@ export const checkConnection = async (req, res, next, store, adapter) => {
     res.sendFile("index.html", { root: "src/" + "public" }, (err) => {
       if (err) {
         res.end(500);
-      } else res.status(200);
+      } else {
+        res.locals.connectUA = true;
+        next();
+      }
     });
-    return;
   } else {
     const socketId = await store.get(access);
     socket = io.sockets.sockets.get(socketId);
