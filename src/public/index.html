@@ -10,7 +10,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <script>
-    function refresh(key) {
+    function refresh() {
       function createPrompt() {
         let div = document.createElement("div");
         let prompt = document.createElement("p");
@@ -27,17 +27,18 @@
       initial.classList.add("hidden");
       const container = document.getElementById("action-container");
       container.appendChild(createPrompt());
+      return;
     }
 
     async function connect(e) {
       const key = document.getElementById("connect-key").value;
-      await fetch("https://node-tunnel.herokuapp.com/", {
+      await fetch("http://localhost:1337/", {
         mode: "cors",
         headers: new Headers({
           Authorization: "Bearer " + key,
         }),
       })
-        .then((res) => res.status === "okay" && refresh())
+        .then((res) => res.ok && refresh())
         .catch((err) => console.error(err));
     }
   </script>
