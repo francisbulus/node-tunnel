@@ -10,14 +10,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <script>
-    async function refresh(key) {
-      await fetch("https://node-tunnel.herokuapp.com/", {
-        mode: "cors",
-        headers: new Headers({
-          Authorization: "Bearer " + key,
-        }),
-      }).then(() => (window.location = window.location.href));
+    function refresh(key) {
+      function createPrompt() {
+        let div = document.createElement("div");
+        let prompt = document.createElement("p");
+        prompt.inner;
+        prompt.classList.add("py-6");
+        prompt.classList.add("text-lg");
+        prompt.innerText =
+          " You now have access to the user's port - simply reload this page.  🎉";
+        div.appendChild(prompt);
+        console.log(div);
+        return div;
+      }
+      const initial = document.getElementById("enter-key");
+      initial.classList.add("hidden");
+      const container = document.getElementById("action-container");
+      container.appendChild(createPrompt());
     }
+
     async function connect(e) {
       const key = document.getElementById("connect-key").value;
       await fetch("https://node-tunnel.herokuapp.com/", {
@@ -26,30 +37,32 @@
           Authorization: "Bearer " + key,
         }),
       })
-        .then((res) => refresh(key))
+        .then((res) => refresh())
         .catch((err) => console.error(err));
     }
   </script>
   <div class="hero min-h-screen bg-base-200">
     <div class="hero-content text-center">
-      <div class="max-w-md">
-        <h1 class="text-5xl font-bold">👋🏾</h1>
-        <p class="py-6">Your session key here 👇🏾</p>
-        <!-- <form onsubmit="return false;"> -->
-        <input
-          type="text"
-          placeholder="Enter key"
-          class="input w-full max-w-xs mt-2 mb-4"
-          id="connect-key"
-        />
-        <button
-          class="btn btn-primary mt-2 w-full"
-          id="connect-btn"
-          onclick="connect()"
-        >
-          Connect
-        </button>
-        <!-- </form> -->
+      <div id="action-container" class="max-w-md">
+        <div id="enter-key">
+          <h1 class="text-5xl font-bold">👋🏾</h1>
+          <p class="py-6">Your session key here 👇🏾</p>
+          <!-- <form onsubmit="return false;"> -->
+          <input
+            type="text"
+            placeholder="Enter key"
+            class="input w-full max-w-xs mt-2 mb-4"
+            id="connect-key"
+          />
+          <button
+            class="btn btn-primary mt-2 w-full"
+            id="connect-btn"
+            onclick="connect()"
+          >
+            Connect
+          </button>
+          <!-- </form> -->
+        </div>
       </div>
     </div>
   </div>
