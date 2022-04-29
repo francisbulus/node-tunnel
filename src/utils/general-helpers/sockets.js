@@ -27,8 +27,7 @@ export const checkConnection = async (req, res, next, store, adapter) => {
       if (err) {
         res.end(500);
       } else {
-        res.locals.connectUA = true;
-        next();
+        res.status(200).send("whut whut connected");
       }
     });
   } else {

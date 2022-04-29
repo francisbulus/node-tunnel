@@ -66,7 +66,7 @@ app.use(
     checkConnection(req, res, next, store, adapter);
   },
   (req, res) => {
-    if (res.locals.connectedUA) res.status(200).send("whut whut connected");
+    // if (res.locals.connectedUA) res.status(200).send("whut whut connected");
     const socket = res.locals.socket;
     const id = crypto.randomUUID();
     console.log(id);
