@@ -35,11 +35,12 @@ const connToRedis = async () => {
 };
 
 connToRedis();
-
+let adapter;
 io.on("connection", (socket) => {
   let access;
   socket.once("join", async function (room) {
     // socket.join(room);
+    adapter = socket;
     access = room;
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
@@ -62,7 +63,7 @@ app.use(cors());
 app.use(
   "/",
   async (req, res, next) => {
-    checkConnection(req, res, next, store);
+    checkConnection(req, res, next, store, adapter);
   },
   (req, res) => {
     const socket = res.locals.socket;

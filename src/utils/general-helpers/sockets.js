@@ -14,29 +14,35 @@ export const handleSocketClientDisconnect = async (socket, access) => {
   socket.off("message", handlePing);
 };
 
-export const checkConnection = async (req, res, next, store) => {
+export const checkConnection = async (req, res, next, store, adapter) => {
   const clientIp = proxyAddr(req, (proxy) => proxy);
   const roomAccessFromInput = getToken(req);
   const roomAccessFromSession = await store.get(clientIp);
   let socket;
   const access = roomAccessFromSession || roomAccessFromInput;
-  if (!access) {
-    res.sendFile("index.html", { root: "src/" + "public" });
-    return;
-  } else {
-    const socketId = await store.get(access);
-    socket = io.sockets.sockets.get(socketId);
-    if (!roomAccessFromSession && socket) store.set(clientIp, access);
-    if (!socket) {
-      await store.del(access);
-      await store.del(clientIp);
-      res
-        .status(404)
-        .send("No socket connection found for the given room access key");
-      return;
-    }
-    res.locals.socket = socket;
-    // res.locals.room = access;
-    next();
-  }
+
+  // experiment starts here
+  res.locals.socket = adapter;
+  next();
+  // experiment ends here
+
+  // if (!access) {
+  //   res.sendFile("index.html", { root: "src/" + "public" });
+  //   return;
+  // } else {
+  //   const socketId = await store.get(access);
+  //   socket = io.sockets.sockets.get(socketId);
+  //   if (!roomAccessFromSession && socket) store.set(clientIp, access);
+  //   if (!socket) {
+  //     await store.del(access);
+  //     await store.del(clientIp);
+  //     res
+  //       .status(404)
+  //       .send("No socket connection found for the given room access key");
+  //     return;
+  //   }
+  //   res.locals.socket = socket;
+  //   // res.locals.room = access;
+  //   next();
+  // }
 };
