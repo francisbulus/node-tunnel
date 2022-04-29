@@ -10,8 +10,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <script>
-    function refresh() {
-      window.location = window.location.href;
+    async function refresh(key) {
+      await fetch("https://node-tunnel.herokuapp.com/", {
+        mode: "cors",
+        headers: new Headers({
+          Authorization: "Bearer " + key,
+        }),
+      }).then(() => (window.location = window.location.href));
     }
     async function connect(e) {
       const key = document.getElementById("connect-key").value;
@@ -21,7 +26,7 @@
           Authorization: "Bearer " + key,
         }),
       })
-        .then((res) => refresh())
+        .then((res) => refresh(key))
         .catch((err) => console.error(err));
     }
   </script>
