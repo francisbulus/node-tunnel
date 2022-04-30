@@ -38,7 +38,7 @@ connToRedis();
 io.on("connection", (socket) => {
   let access;
   socket.once("join", async function (room) {
-    // socket.join(room);
+    socket.join(room);
     access = room;
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
