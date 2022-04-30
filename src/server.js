@@ -67,7 +67,6 @@ app.use(
     // if (res.locals.connectedUA) res.status(200).send("whut whut connected");
     const socket = res.locals.socket;
     const id = crypto.randomUUID();
-    console.log(id);
     const inbound = new Request({
       id,
       socket,

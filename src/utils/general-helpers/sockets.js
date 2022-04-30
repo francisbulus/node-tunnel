@@ -27,6 +27,7 @@ export const checkConnection = async (req, res, next, store) => {
       if (err) {
         res.end(500);
       }
+      next();
     });
   } else {
     const socketId = await store.get(access);
