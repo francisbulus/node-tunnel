@@ -3,7 +3,11 @@ import { Request } from "express";
 import { Socket, StreamCallback } from "../utils/types";
 
 export default class Inbound extends Writable {
-  constructor(private id: string, private socket: Socket, req: any) {
+  constructor(
+    private id: string,
+    private socket: Socket,
+    private req: { [key: string]: any }
+  ) {
     super();
     this.socket = socket;
     this.id = id;

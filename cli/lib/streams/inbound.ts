@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import { Socket, StreamHandler } from "../types";
 
 export default class Inbound extends Readable {
-  constructor(private id: number, private socket: Socket) {
+  constructor(public id: any, public socket: Socket) {
     super();
     this.socket = socket;
     this.id = id;

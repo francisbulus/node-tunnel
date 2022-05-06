@@ -2,7 +2,7 @@ import { Writable } from "stream";
 import { Socket, StreamCallback } from "../types";
 
 export default class Outbound extends Writable {
-  constructor(private id: number, private socket: Socket) {
+  constructor(public id: string, public socket: Socket) {
     super();
     this.id = id;
     this.socket = socket;

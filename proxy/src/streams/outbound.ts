@@ -1,7 +1,7 @@
 import { Duplex, Readable } from "stream";
 import { Socket, StreamCallback } from "../utils/types";
 export default class Outbound extends Duplex {
-  constructor(private id: string, private socket: Socket) {
+  constructor(public id: string, public socket: any) {
     super();
     this.socket = socket;
     this.id = id;

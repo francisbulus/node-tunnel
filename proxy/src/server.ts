@@ -43,6 +43,7 @@ let access: any;
 connToRedis();
 io.on("connection", (socket): void => {
   access = socket;
+  console.log("access", access);
   socket.once("join", async function (room): Promise<void> {
     socket.join(room);
     await store.set(room, socket.id);
@@ -71,7 +72,6 @@ app.use(
   //   checkConnection(req, res, next, store);
   // },
   (req, res) => {
-    // if (res.locals.connectedUA) res.status(200).send("whut whut connected");
     const socket = access;
     const id = crypto.randomUUID();
     const inbound = new Inbound(id, socket, {
