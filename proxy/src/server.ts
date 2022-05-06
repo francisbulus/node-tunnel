@@ -19,6 +19,7 @@ import { createClient } from "redis";
 import crypto from "crypto";
 import Inbound from "./streams/inbound.js";
 import Outbound from "./streams/outbound.js";
+import { Req } from "./utils/types.js";
 const store = createClient({
   url: process.env.REDIS_URL,
 });
@@ -47,7 +48,9 @@ io.on("connection", (socket) => {
       joined_at: Date.now(),
     });
   });
-  socket.on("message", handlePing.bind(null, socket));
+  socket.on("message", function (msg) {
+    handlePing(msg, socket);
+  });
   socket.once("disconnect", function () {
     handleSocketClientDisconnect(socket, access);
   });
@@ -74,16 +77,19 @@ app.use(
       path: req.url,
     });
 
-    req.once("aborted", handleBadRequestToSocket.bind(null, req));
-    req.once("error", handleBadRequestToSocket.bind(null, req));
+    req.once("aborted", function (err, req) {
+      handleBadRequestToSocket(err, req);
+    });
+    req.once("error", function (err: string, req: Req) {
+      handleBadRequestToSocket(err, req);
+    });
     req.once("finish", () => {
-      req.off("aborted", handleBadRequestToSocket.bind(null, req));
-
       req.off("aborted", function (err, req) {
         handleBadRequestToSocket(err, req);
       });
-
-      req.off("error", handleBadRequestToSocket.bind(null, req));
+      req.off("error", function (err, req) {
+        handleBadRequestToSocket(err, req);
+      });
     });
     req.pipe(inbound);
     const outbound = new Outbound(id, socket);
