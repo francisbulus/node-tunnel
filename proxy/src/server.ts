@@ -78,6 +78,11 @@ app.use(
     req.once("error", handleBadRequestToSocket.bind(null, req));
     req.once("finish", () => {
       req.off("aborted", handleBadRequestToSocket.bind(null, req));
+
+      req.off("aborted", function (err, req) {
+        handleBadRequestToSocket(err, req);
+      });
+
       req.off("error", handleBadRequestToSocket.bind(null, req));
     });
     req.pipe(inbound);

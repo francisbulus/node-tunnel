@@ -12,10 +12,7 @@ export const handleSocketError = (res: Res, socket: Socket) => {
   res.end(500);
 };
 
-export const handleRequestError = (
-  res: Res,
-  outbound: NodeJS.ReadableStream
-) => {
+export const handleRequestError = (res: Res, outbound: any) => {
   outbound.off("response", handleResponse);
   outbound.destroy();
   res.end(502);

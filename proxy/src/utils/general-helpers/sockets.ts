@@ -3,8 +3,7 @@ import proxyAddr from "proxy-addr";
 import { io, store } from "../../server.js";
 import { getToken } from "./server.js";
 import { StreamCallback, Socket } from "../types.js";
-import { IncomingMessage } from "http";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
+import { Request, Response } from "express";
 
 export const handlePing = (msg: string, socket: Socket): void => {
   if (msg !== "ping") return;
@@ -12,7 +11,7 @@ export const handlePing = (msg: string, socket: Socket): void => {
 };
 
 export const handleSocketClientDisconnect = async (
-  socket: any,
+  socket: Socket,
   access: string
 ) => {
   await store.del(access);
@@ -21,23 +20,8 @@ export const handleSocketClientDisconnect = async (
 };
 
 export const checkConnection = async (
-  req: IncomingMessage,
-  res: {
-    sendFile: (
-      arg0: string,
-      arg1: { root: string },
-      arg2: (err: any) => void
-    ) => void;
-    end: (arg0: number) => void;
-    status: (arg0: number) => {
-      (): any;
-      new (): any;
-      send: { (arg0: string): void; new (): any };
-    };
-    locals: {
-      socket: Socket;
-    };
-  },
+  req: Request,
+  res: Response,
   next: StreamCallback,
   store: {
     get: (arg0: string) => any;
@@ -45,13 +29,11 @@ export const checkConnection = async (
     del: (arg0: string) => any;
   }
 ) => {
-  const clientIp = proxyAddr(req, (proxy) => proxy);
+  const clientIp = proxyAddr(req, (proxy: any): any => proxy);
   const roomAccessFromInput = getToken(req);
   const roomAccessFromSession = await store.get(clientIp);
   let socket;
   const access = roomAccessFromSession || roomAccessFromInput;
-
-  // experiment ends here
   if (!access) {
     res.sendFile("index.html", { root: "src/" + "public" }, (err) => {
       if (err) {

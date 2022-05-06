@@ -1,28 +1,23 @@
-import { Readable } from "stream";
-export default class Outbound extends Readable {
-  socket: any;
-  id: any;
-  constructor(id, socket) {
+import { Duplex, Readable } from "stream";
+import { Socket, StreamCallback } from "../utils/types";
+export default class Outbound extends Duplex {
+  constructor(private id: string, private socket: Socket) {
     super();
     this.socket = socket;
     this.id = id;
-
-    /* The handlePipe function processes simple chunks of data being piped - 
-    ideally this would be data streamed via _write
-    */
-    const handlePipe = (id, data) => {
+    const handlePipe = (id: string, data: any) => {
       if (this.id === id) {
         this.push(data);
       }
     };
-    const handlePipes = (id, data) => {
+    const handlePipes = (id: string, data: any[]) => {
       if (this.id === id) {
-        data.forEach((chunk) => {
+        data.forEach((chunk: any) => {
           this.push(chunk);
         });
       }
     };
-    const handleStreamClose = (id, data) => {
+    const handleStreamClose = (id: string, data: any) => {
       if (this.id !== id) return;
       if (data) this.push(data);
       this.socket.off("outbound-pipe", handlePipe);
@@ -32,7 +27,10 @@ export default class Outbound extends Readable {
       this.push(null);
     };
 
-    const handleResponse = (id, data) => {
+    const handleResponse = (
+      id: string,
+      data: { statusCode: number; statusMessage: string; headers: any }
+    ) => {
       if (this.id === id) {
         this.socket.off("request-error", handleBadRequest);
         this.socket.off("response", handleResponse);
@@ -41,7 +39,7 @@ export default class Outbound extends Readable {
       }
     };
 
-    const handleBadRequest = (id, error) => {
+    const handleBadRequest = (id: string, error: any) => {
       if (this.id === id) {
         this.socket.off("response", handleResponse);
         this.socket.off("outbound-pipe", handlePipe);
@@ -53,7 +51,7 @@ export default class Outbound extends Readable {
       }
     };
 
-    const handleStreamError = (id, err) => {
+    const handleStreamError = (id: string, err: string | undefined) => {
       if (this.id !== id) {
         return;
       }
@@ -72,5 +70,16 @@ export default class Outbound extends Readable {
     this.socket.on("outbound-pipe-error", handleStreamError);
   }
 
-  _read(size) {}
+  _destroy(error: Error | null, next: (error: Error | null) => void): void {
+    if (error) {
+      this.socket.emit("outbound-pipe-error", this.id, error && error.message);
+      this.socket.conn.once("drain", () => {
+        next(error);
+      });
+      return;
+    }
+    next(null);
+  }
+
+  _read(size: any) {}
 }
