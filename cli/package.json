@@ -1,0 +1,36 @@
+{
+  "name": "node-tunnel-controller-cli",
+  "version": "1.0.0",
+  "main": "src/cli.js",
+  "repository": "https://github.com/francisbulus/node-tunnel-controller-cli.git",
+  "author": "“Francis <“notchera@gmail.com\nssh-keygen -t rsa -C “notchera@gmail.com>",
+  "license": "MIT",
+  "bin": {
+    "tunnel": "bin/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx tsc"
+  },
+  "keywords": [
+    "node-tunnel",
+    "http-tunnel",
+    "proxy-server"
+  ],
+  "dependencies": {
+    "arg": "^5.0.1",
+    "dotenv": "^16.0.0",
+    "nanoid": "^3.3.3",
+    "socket.io-client": "^4.4.1"
+  },
+  "files": [
+    "bin/",
+    "src/"
+  ],
+  "devDependencies": {
+    "@types/node": "^17.0.31",
+    "typescript": "^4.6.4"
+  }
+}
