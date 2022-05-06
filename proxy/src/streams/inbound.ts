@@ -1,12 +1,12 @@
 import { Writable } from "stream";
 
-export default class Request extends Writable {
-  constructor({ id, socket, req }) {
+export default class Inbound extends Writable {
+  constructor(id, socket, req) {
     super();
-    this._socket = socket;
-    this._id = id;
+    this.socket = socket;
+    this.id = id;
     // this._room = room;
-    this._socket.emit("request", id, req);
+    this.socket.emit("request", id, req);
   }
 
   /*
@@ -14,8 +14,8 @@ export default class Request extends Writable {
  stream
   */
   _write(data, enc, next) {
-    this._socket.emit("inbound-pipe", this._id, data);
-    this._socket.conn.once("drain", () => {
+    this.socket.emit("inbound-pipe", this.id, data);
+    this.socket.conn.once("drain", () => {
       next();
     });
   }
@@ -30,24 +30,24 @@ export default class Request extends Writable {
   will be sent to the local server
   */
   _writev(data, next) {
-    this._socket.emit("inbound-pipes", this._id, data);
-    this._socket.conn.once("drain", () => {
+    this.socket.emit("inbound-pipes", this.id, data);
+    this.socket.conn.once("drain", () => {
       next();
     });
   }
 
   _destroy(err, next) {
     if (!err) next();
-    this._socket.emit("inbound-pipe-error", this._id, err && err.message);
-    this._socket.conn.once("drain", () => {
+    this.socket.emit("inbound-pipe-error", this.id, err && err.message);
+    this.socket.conn.once("drain", () => {
       next();
     });
     return;
   }
 
   _final(next) {
-    this._socket.emit("inbound-pipe-end", this._id);
-    this._socket.conn.once("drain", () => {
+    this.socket.emit("inbound-pipe-end", this.id);
+    this.socket.conn.once("drain", () => {
       next();
     });
   }

@@ -1,8 +1,6 @@
-import express from "express";
+import express, { Express, Request, Response } from "express";
 import http from "http";
 import { Server } from "socket.io";
-import Request from "./streams/request.js";
-import Response from "./streams/response.js";
 import morgan from "morgan";
 import {
   handleBadRequestToSocket,
@@ -19,10 +17,12 @@ import { checkConnection } from "./utils/general-helpers/sockets.js";
 import cors from "cors";
 import { createClient } from "redis";
 import crypto from "crypto";
+import Inbound from "./streams/inbound.js";
+import Outbound from "./streams/outbound.js";
 const store = createClient({
   url: process.env.REDIS_URL,
 });
-const app = express();
+const app: Express = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
@@ -34,7 +34,7 @@ const connToRedis = async () => {
   await store.connect();
 };
 
-let access;
+let access: any;
 
 connToRedis();
 io.on("connection", (socket) => {
@@ -68,14 +68,10 @@ app.use(
     // if (res.locals.connectedUA) res.status(200).send("whut whut connected");
     const socket = access;
     const id = crypto.randomUUID();
-    const inbound = new Request({
-      id,
-      socket,
-      req: {
-        method: req.method,
-        headers: Object.assign({}, req.headers),
-        path: req.url,
-      },
+    const inbound = new Inbound(id, socket, {
+      method: req.method,
+      headers: Object.assign({}, req.headers),
+      path: req.url,
     });
 
     req.once("aborted", handleBadRequestToSocket.bind(null, req));
@@ -85,7 +81,7 @@ app.use(
       req.off("error", handleBadRequestToSocket.bind(null, req));
     });
     req.pipe(inbound);
-    const outbound = new Response({ id, socket });
+    const outbound = new Outbound(id, socket);
 
     const handleSocketErrorWrapper = () => {
       handleSocketError(res, socket);

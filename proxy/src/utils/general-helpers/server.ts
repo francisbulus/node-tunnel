@@ -1,6 +1,7 @@
 import { handleRequestError } from "../error-handlers/server.js";
+import { ResponseResolver, Req } from "../types.js";
 
-export const handleResponse = (
+export const handleResponse: ResponseResolver = (
   statusCode,
   statusMessage,
   headers,
@@ -11,7 +12,7 @@ export const handleResponse = (
   res.writeHead(statusCode, statusMessage, headers);
 };
 
-export const getToken = (req) => {
+export const getToken = (req: Req) => {
   if (
     req.headers.authorization &&
     req.headers.authorization.split(" ")[0] === "Bearer"
