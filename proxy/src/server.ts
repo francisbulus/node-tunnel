@@ -20,27 +20,30 @@ import crypto from "crypto";
 import Inbound from "./streams/inbound.js";
 import Outbound from "./streams/outbound.js";
 import { Req } from "./utils/types.js";
+import { DefaultEventsMap } from "socket.io/dist/typed-events";
+
 const store = createClient({
   url: process.env.REDIS_URL,
 });
 const app: Express = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> =
+  new Server(server);
 
 store.on("connect", function () {
   console.log("connected to some rando!");
 });
 
-const connToRedis = async () => {
+const connToRedis = async (): Promise<void> => {
   await store.connect();
 };
 
 let access: any;
 
 connToRedis();
-io.on("connection", (socket) => {
+io.on("connection", (socket): void => {
   access = socket;
-  socket.once("join", async function (room) {
+  socket.once("join", async function (room): Promise<void> {
     socket.join(room);
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
@@ -48,13 +51,13 @@ io.on("connection", (socket) => {
       joined_at: Date.now(),
     });
   });
-  socket.on("message", function (msg) {
+  socket.on("message", function (msg): void {
     handlePing(msg, socket);
   });
-  socket.once("disconnect", function () {
+  socket.once("disconnect", function (): void {
     handleSocketClientDisconnect(socket, access);
   });
-  socket.once("error", function () {
+  socket.once("error", function (): void {
     handleSocketConnectionError(socket, store, access);
   });
 });
