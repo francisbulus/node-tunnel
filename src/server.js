@@ -34,12 +34,13 @@ const connToRedis = async () => {
   await store.connect();
 };
 
+let access;
+
 connToRedis();
 io.on("connection", (socket) => {
-  let access;
+  access = socket;
   socket.once("join", async function (room) {
     socket.join(room);
-    access = room;
     await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
       message: `You've been connected!`,
@@ -60,12 +61,12 @@ app.use(morgan("tiny"));
 app.use(cors());
 app.use(
   "/",
-  async (req, res, next) => {
-    checkConnection(req, res, next, store);
-  },
+  // async (req, res, next) => {
+  //   checkConnection(req, res, next, store);
+  // },
   (req, res) => {
     // if (res.locals.connectedUA) res.status(200).send("whut whut connected");
-    const socket = res.locals.socket;
+    const socket = access;
     const id = crypto.randomUUID();
     const inbound = new Request({
       id,
