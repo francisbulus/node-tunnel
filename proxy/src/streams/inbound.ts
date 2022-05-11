@@ -1,5 +1,4 @@
 import { Writable } from "stream";
-import { Request } from "express";
 import { Socket, StreamCallback } from "../utils/types";
 
 export default class Inbound extends Writable {

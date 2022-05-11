@@ -1,5 +1,7 @@
 ### How It Works
 
+**Note:** WIP
+
 The command line tool (i.e the client) is the first actor in the communication pipeline - the `tunnel -p TARGET_LOCAL_PORT_NUMBER_HERE` command initiates a socket connection between the proxy server and itself. A key will be generated upon establishing this connection which can be sent to any user to enter on the proxy server's home page (i.e the base endpoint of the deployed server), which will contain a form for the key input.
 
 If the local port the client is connected to has, say, a React app running on it, this will be piped to the user agent via the proxy.
