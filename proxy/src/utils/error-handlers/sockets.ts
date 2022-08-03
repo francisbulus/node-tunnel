@@ -6,10 +6,10 @@ import { Socket } from "../types";
 
 export const handleSocketConnectionError = async (
   socket: Socket,
-  store: any,
+  // store: any,
   access: string
 ) => {
-  await store.del(access);
+  // await store.del(access);
   socket.off("message", handlePing);
   socket.off("disconnect", handleSocketClientDisconnect);
 };

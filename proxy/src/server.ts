@@ -22,31 +22,31 @@ import Outbound from "./streams/outbound.js";
 import { Req } from "./utils/types.js";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
-const store = createClient({
-  url: process.env.REDIS_URL,
-});
+// const store = createClient({
+//   url: process.env.REDIS_URL,
+// });
 const app: Express = express();
 const server = http.createServer(app);
 const io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> =
   new Server(server);
 
-store.on("connect", function () {
-  console.log("connected to some rando!");
-});
+// store.on("connect", function () {
+//   console.log("connected to some rando!");
+// });
 
-const connToRedis = async (): Promise<void> => {
-  await store.connect();
-};
+// const connToRedis = async (): Promise<void> => {
+//   await store.connect();
+// };
 
 let access: any;
 
-connToRedis();
+// connToRedis();
 io.on("connection", (socket): void => {
   access = socket;
   console.log("access", access);
   socket.once("join", async function (room): Promise<void> {
     socket.join(room);
-    await store.set(room, socket.id);
+    // await store.set(room, socket.id);
     io.to(room).emit("room-confirmation", {
       message: `You've been connected!`,
       joined_at: Date.now(),
@@ -59,7 +59,7 @@ io.on("connection", (socket): void => {
     handleSocketClientDisconnect(socket, access);
   });
   socket.once("error", function (): void {
-    handleSocketConnectionError(socket, store, access);
+    handleSocketConnectionError(socket, access);
   });
 });
 
@@ -117,6 +117,6 @@ app.use(
   }
 );
 
-export { io, store };
+export { io };
 
 export default server;
