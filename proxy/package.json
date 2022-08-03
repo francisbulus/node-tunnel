@@ -10,7 +10,7 @@
     "build-babel": "babel -d ./build ./src -s",
     "build-static": "babel -d ./build ./src/public/src/index.html",
     "dev": "concurrently \"npx tsc --watch\" \"nodemon -q build/index.js\"",
-    "deploy": "git add . && git commit -m Heroku && git push heroku master"
+    "deploy": "git add . && git commit -m Heroku && git subtree push --prefix <proxy> heroku master"
   },
   "repository": "https://github.com/francisbulus/node-tunnel-server.git",
   "engines": {
